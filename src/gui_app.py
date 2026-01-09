@@ -6,6 +6,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
+import ttkbootstrap as tb
+from ttkbootstrap.constants import BOTH, HORIZONTAL, PRIMARY, VERTICAL, X, Y
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -13,34 +15,35 @@ from matplotlib.figure import Figure
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 LOGO_PATH = ASSETS_DIR / "audiocinema.png"
 
-BACKGROUND = "#f4f5f7"
-SIDEBAR_BG = "#eef0f3"
-ACCENT = "#8b939c"
+BACKGROUND = "#f2f2f2"
+SIDEBAR_BG = "#f7f7f7"
+ACCENT = "#8c949e"
 TEXT_PRIMARY = "#2d2f33"
+PLOT_BG = "#ffffff"
 
 
 def build_plot(parent: tk.Widget) -> FigureCanvasTkAgg:
-    figure = Figure(figsize=(3.2, 2.4), dpi=100, facecolor="white")
+    figure = Figure(figsize=(3.2, 2.4), dpi=100, facecolor=PLOT_BG)
     axis = figure.add_subplot(111)
     axis.set_xlim(0, 1)
     axis.set_ylim(0, 1)
     axis.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     axis.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     axis.grid(False)
-    axis.set_facecolor("white")
+    axis.set_facecolor(PLOT_BG)
     canvas = FigureCanvasTkAgg(figure, master=parent)
     canvas.draw()
     return canvas
 
 
-def create_app() -> tk.Tk:
-    root = tk.Tk()
+def create_app() -> tb.Window:
+    root = tb.Window(themename="flatly")
     root.title("AudioCinema")
     root.geometry("980x720")
     root.configure(background=BACKGROUND)
+    root.minsize(900, 640)
 
     style = ttk.Style(root)
-    style.theme_use("clam")
     style.configure("TFrame", background=BACKGROUND)
     style.configure("Sidebar.TFrame", background=SIDEBAR_BG)
     style.configure(
@@ -61,36 +64,26 @@ def create_app() -> tk.Tk:
         font=("Segoe UI", 9),
     )
     style.configure(
-        "Action.TButton",
-        background=ACCENT,
-        foreground="white",
-        font=("Segoe UI", 10, "bold"),
-        padding=(12, 8),
-        borderwidth=0,
-    )
-    style.map(
-        "Action.TButton",
-        background=[("active", "#7b848e")],
-    )
-    style.configure(
         "Status.TLabel",
         background=BACKGROUND,
         foreground=TEXT_PRIMARY,
         font=("Segoe UI", 10, "bold"),
     )
 
-    root.columnconfigure(0, weight=0)
-    root.columnconfigure(1, weight=1)
-    root.rowconfigure(0, weight=1)
+    root_frame = ttk.Frame(root, padding=8)
+    root_frame.pack(fill=BOTH, expand=True)
 
-    sidebar = ttk.Frame(root, padding=16, style="Sidebar.TFrame")
-    sidebar.grid(row=0, column=0, sticky="ns")
+    paned = ttk.Panedwindow(root_frame, orient=HORIZONTAL)
+    paned.pack(fill=BOTH, expand=True)
 
-    separator = ttk.Separator(root, orient="vertical")
-    separator.grid(row=0, column=1, sticky="nsw")
+    sidebar = ttk.Frame(paned, padding=16, style="Sidebar.TFrame")
+    paned.add(sidebar, weight=1)
 
-    content = ttk.Frame(root, padding=16)
-    content.grid(row=0, column=1, sticky="nsew")
+    separator = ttk.Separator(root_frame, orient=VERTICAL)
+    paned.add(separator)
+
+    content = ttk.Frame(paned, padding=16)
+    paned.add(content, weight=4)
     content.columnconfigure(0, weight=1)
     content.rowconfigure(1, weight=1)
 
@@ -117,15 +110,10 @@ def create_app() -> tk.Tk:
         style="Subtitle.TLabel",
     ).pack(pady=(6, 18))
 
-    ttk.Button(sidebar, text="Settings", style="Action.TButton").pack(
-        fill="x", pady=4
-    )
-    ttk.Button(sidebar, text="Record Reference", style="Action.TButton").pack(
-        fill="x", pady=4
-    )
-    ttk.Button(sidebar, text="Record Test", style="Action.TButton").pack(
-        fill="x", pady=4
-    )
+    button_style = {"bootstyle": PRIMARY}
+    tb.Button(sidebar, text="Settings", **button_style).pack(fill=X, pady=4)
+    tb.Button(sidebar, text="Record Reference", **button_style).pack(fill=X, pady=4)
+    tb.Button(sidebar, text="Record Test", **button_style).pack(fill=X, pady=4)
 
     ttk.Label(sidebar, text="Messages:", style="Sidebar.TLabel").pack(
         anchor="w", pady=(16, 6)
@@ -175,7 +163,7 @@ def create_app() -> tk.Tk:
 
     for index in range(4):
         row, column = divmod(index, 2)
-        plot_container = ttk.Frame(plots_frame, padding=8)
+        plot_container = ttk.Frame(plots_frame, padding=10)
         plot_container.grid(row=row, column=column, padx=12, pady=12, sticky="nsew")
         canvas = build_plot(plot_container)
         canvas.get_tk_widget().pack(fill="both", expand=True)

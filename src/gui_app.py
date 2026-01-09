@@ -13,15 +13,21 @@ from matplotlib.figure import Figure
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 LOGO_PATH = ASSETS_DIR / "audiocinema.png"
 
+BACKGROUND = "#f4f5f7"
+SIDEBAR_BG = "#eef0f3"
+ACCENT = "#8b939c"
+TEXT_PRIMARY = "#2d2f33"
+
 
 def build_plot(parent: tk.Widget) -> FigureCanvasTkAgg:
-    figure = Figure(figsize=(3.2, 2.4), dpi=100)
+    figure = Figure(figsize=(3.2, 2.4), dpi=100, facecolor="white")
     axis = figure.add_subplot(111)
     axis.set_xlim(0, 1)
     axis.set_ylim(0, 1)
     axis.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     axis.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     axis.grid(False)
+    axis.set_facecolor("white")
     canvas = FigureCanvasTkAgg(figure, master=parent)
     canvas.draw()
     return canvas
@@ -31,13 +37,53 @@ def create_app() -> tk.Tk:
     root = tk.Tk()
     root.title("AudioCinema")
     root.geometry("980x720")
-    root.configure(background="#e6e6e6")
+    root.configure(background=BACKGROUND)
+
+    style = ttk.Style(root)
+    style.theme_use("clam")
+    style.configure("TFrame", background=BACKGROUND)
+    style.configure("Sidebar.TFrame", background=SIDEBAR_BG)
+    style.configure(
+        "Sidebar.TLabel",
+        background=SIDEBAR_BG,
+        foreground=TEXT_PRIMARY,
+    )
+    style.configure(
+        "Title.TLabel",
+        background=SIDEBAR_BG,
+        foreground=TEXT_PRIMARY,
+        font=("Segoe UI", 16, "bold"),
+    )
+    style.configure(
+        "Subtitle.TLabel",
+        background=SIDEBAR_BG,
+        foreground=TEXT_PRIMARY,
+        font=("Segoe UI", 9),
+    )
+    style.configure(
+        "Action.TButton",
+        background=ACCENT,
+        foreground="white",
+        font=("Segoe UI", 10, "bold"),
+        padding=(12, 8),
+        borderwidth=0,
+    )
+    style.map(
+        "Action.TButton",
+        background=[("active", "#7b848e")],
+    )
+    style.configure(
+        "Status.TLabel",
+        background=BACKGROUND,
+        foreground=TEXT_PRIMARY,
+        font=("Segoe UI", 10, "bold"),
+    )
 
     root.columnconfigure(0, weight=0)
     root.columnconfigure(1, weight=1)
     root.rowconfigure(0, weight=1)
 
-    sidebar = ttk.Frame(root, padding=16)
+    sidebar = ttk.Frame(root, padding=16, style="Sidebar.TFrame")
     sidebar.grid(row=0, column=0, sticky="ns")
 
     separator = ttk.Separator(root, orient="vertical")
@@ -50,14 +96,14 @@ def create_app() -> tk.Tk:
 
     if LOGO_PATH.exists():
         logo_image = tk.PhotoImage(file=str(LOGO_PATH))
-        logo_label = ttk.Label(sidebar, image=logo_image)
+        logo_label = ttk.Label(sidebar, image=logo_image, style="Sidebar.TLabel")
         logo_label.image = logo_image
         logo_label.pack(pady=(0, 8))
 
     ttk.Label(
         sidebar,
         text="AudioCinema",
-        font=("Segoe UI", 16, "bold"),
+        style="Title.TLabel",
     ).pack()
 
     ttk.Label(
@@ -68,15 +114,32 @@ def create_app() -> tk.Tk:
             "immersive experience."
         ),
         justify="center",
+        style="Subtitle.TLabel",
     ).pack(pady=(6, 18))
 
-    button_style = {"width": 24}
-    ttk.Button(sidebar, text="Settings", **button_style).pack(pady=4)
-    ttk.Button(sidebar, text="Record Reference", **button_style).pack(pady=4)
-    ttk.Button(sidebar, text="Record Test", **button_style).pack(pady=4)
+    ttk.Button(sidebar, text="Settings", style="Action.TButton").pack(
+        fill="x", pady=4
+    )
+    ttk.Button(sidebar, text="Record Reference", style="Action.TButton").pack(
+        fill="x", pady=4
+    )
+    ttk.Button(sidebar, text="Record Test", style="Action.TButton").pack(
+        fill="x", pady=4
+    )
 
-    ttk.Label(sidebar, text="Messages:").pack(anchor="w", pady=(16, 6))
-    message_box = tk.Text(sidebar, width=26, height=10, wrap="word")
+    ttk.Label(sidebar, text="Messages:", style="Sidebar.TLabel").pack(
+        anchor="w", pady=(16, 6)
+    )
+    message_box = tk.Text(
+        sidebar,
+        width=26,
+        height=10,
+        wrap="word",
+        relief="solid",
+        borderwidth=1,
+        background="white",
+        font=("Segoe UI", 9),
+    )
     message_box.insert(
         "1.0",
         "• Set everything up in Settings,\n"
@@ -99,7 +162,7 @@ def create_app() -> tk.Tk:
     ttk.Label(info_frame, text="EVALUATION:").grid(
         row=1, column=0, sticky="w", padx=(0, 8), pady=(8, 0)
     )
-    ttk.Label(info_frame, text="FAILED", font=("Segoe UI", 10, "bold")).grid(
+    ttk.Label(info_frame, text="FAILED", style="Status.TLabel").grid(
         row=1, column=1, sticky="w", pady=(8, 0)
     )
 
@@ -112,7 +175,7 @@ def create_app() -> tk.Tk:
 
     for index in range(4):
         row, column = divmod(index, 2)
-        plot_container = ttk.Frame(plots_frame)
+        plot_container = ttk.Frame(plots_frame, padding=8)
         plot_container.grid(row=row, column=column, padx=12, pady=12, sticky="nsew")
         canvas = build_plot(plot_container)
         canvas.get_tk_widget().pack(fill="both", expand=True)

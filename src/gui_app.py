@@ -34,6 +34,12 @@ EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 ENV_INPUT_INDEX = os.environ.get("AUDIOCINEMA_INPUT_INDEX")
 
 
+
+
+REF_CUTOFF_LOW_HZ = 30.0
+REF_CUTOFF_HIGH_HZ = 8000.0
+
+
 #----------------------------------------------------------------------------------------------------------------Texto que aparece en el Boton "Information"
 INFO_TEXT = (
     "AudioCinema\n\n"
@@ -319,18 +325,63 @@ class AudioCinemaGUI:
         r = ttk.Frame(nb); nb.add(r, text="Record Reference")
         ref_var = tk.StringVar(value=self._cfg(["reference","wav_path"], str(ASSETS_DIR/"reference_master.wav")))
 
-
+        r.columnconfigure(0, weight=1)
+        r.columnconfigure(1, weight=1)
 
         
-        ref_path_var = tk.StringVar(value=ref_var.get())
-        ttk.Label(r, text="Reference track will be saved to:").grid(row=0, column=0, columnspan=2, sticky="w", pady=(8,2))
-        ttk.Entry(r, textvariable=ref_path_var, width=50, state="readonly").grid(row=1, column=0, columnspan=2, sticky="w", padx=6, pady=(0,8))
-        ttk.Label(r, text="Reference file (.wav):").grid(row=2, column=0, sticky="w", pady=(6,2))
-        ttk.Entry(r, textvariable=ref_var, width=52).grid(row=2, column=1, sticky="we", pady=(6,2))
+        ref_path_var = tk.StringVar(value=f"Reference track will be saved to: {ref_var.get()}")
+        cutoff_var = tk.StringVar(value=f"Cutoff range: {REF_CUTOFF_LOW_HZ:.0f} Hz - {REF_CUTOFF_HIGH_HZ:.0f} Hz")
+        recorded_var = tk.StringVar(value="Reference track was recorded on: —")
 
+        ref_fig = Figure(figsize=(6.2, 2.4), dpi=100)
+        ref_ax_orig = ref_fig.add_subplot(1, 2, 1)
+        ref_ax_trim = ref_fig.add_subplot(1, 2, 2)
+        ref_canvas = FigureCanvasTkAgg(ref_fig, master=r)
+        ref_canvas.get_tk_widget().grid(row=0, column=0, columnspan=2, sticky="nsew", pady=(0, 8))
+
+        def _apply_bandpass(x: np.ndarray, fs: int, low_hz: float, high_hz: float) -> np.ndarray:
+            if x.size == 0:
+                return x
+            X = np.fft.rfft(x)
+            freqs = np.fft.rfftfreq(len(x), d=1.0 / fs)
+            mask = (freqs >= low_hz) & (freqs <= high_hz)
+            X[~mask] = 0
+            y = np.fft.irfft(X, n=len(x))
+            return y.astype(np.float32, copy=False)
+
+        def _plot_reference_waveforms(path: Path | None):
+            ref_ax_orig.clear()
+            ref_ax_trim.clear()
+            ref_ax_orig.set_title("Reference - ORIGINAL")
+            ref_ax_trim.set_title("Reference - TRIMMED")
+            for ax in (ref_ax_orig, ref_ax_trim):
+                ax.set_xlabel("Time (s)")
+                ax.set_ylabel("Amplitude")
+                ax.grid(True, axis="x", ls=":")
+
+            if path and path.exists():
+                x_ref, fs_ref = sf.read(path, dtype="float32", always_2d=False)
+                if getattr(x_ref, "ndim", 1) == 2:
+                    x_ref = x_ref.mean(axis=1)
+                x_ref = normalize_mono(x_ref)
+                x_trim = _apply_bandpass(x_ref, fs_ref, REF_CUTOFF_LOW_HZ, REF_CUTOFF_HIGH_HZ)
+                t_ref = np.arange(len(x_ref), dtype=np.float32) / float(fs_ref if fs_ref else 1)
+                ref_ax_orig.plot(t_ref, x_ref, linewidth=0.8)
+                ref_ax_trim.plot(t_ref, x_trim, linewidth=0.8)
+
+                stamp = datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                recorded_var.set(f"Reference track was recorded on: {stamp}")
+            else:
+                recorded_var.set("Reference track was recorded on: —")
+
+            ref_canvas.draw_idle()
+
+        ttk.Label(r, textvariable=cutoff_var, anchor="center").grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 6))
+        ttk.Label(r, textvariable=ref_path_var, anchor="center").grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 6))
+        ttk.Label(r, textvariable=recorded_var, anchor="center").grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 10))
         
         def _record_reference_here():
-            """Graba y guarda en assets/reference_master.wav con fs/duración actuales."""
+            """Record and save to assets/reference_master.wav using current duration."""
             fs_now = int(fs_var.get())
             dur_now = float(dur_var.get())
             # usar mismo dispositivo preferido que la app
@@ -340,14 +391,14 @@ class AudioCinemaGUI:
                 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
                 out = (ASSETS_DIR / "reference_master.wav").resolve()
                 sf.write(str(out), x, fs_now)
-                # reflejar en UI de la pestaña y en General
-                ref_path_var.set(str(out))
+                ref_path_var.set(f"Reference track will be saved to: {out}")
                 ref_var.set(str(out))
+                _plot_reference_waveforms(out)
                 messagebox.showinfo("Reference Track", f"Reference saved to:\n{out}")
             except Exception as e:
                 messagebox.showerror("Reference Track", f"Recording failed:\n{e}")
 
-        ttk.Button(r, text="Record reference now", command=_record_reference_here)\
+        ttk.Button(r, text="Record reference", command=_record_reference_here)\
             .grid(row=3, column=0, sticky="w", padx=6, pady=6)
         ttk.Label(r, text="(Uses the duration configured above)").grid(row=3, column=1, sticky="w")
 

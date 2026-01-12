@@ -398,8 +398,6 @@ class AudioCinemaGUI:
             except Exception as e:
                 messagebox.showerror("Reference Track", f"Recording failed:\n{e}")
 
-        ttk.Label(r, text="(Uses the duration configured above)", anchor="center")\
-            .grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
         record_btn = tb.Button(r, text="Record Reference", bootstyle=PRIMARY, command=_record_reference_here)
         record_btn.grid(row=5, column=0, columnspan=2, pady=(0, 6))

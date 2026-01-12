@@ -7,13 +7,14 @@ from pathlib import Path
 from tkinter import ttk
 
 import ttkbootstrap as tb
-from ttkbootstrap.constants import BOTH, HORIZONTAL, PRIMARY, VERTICAL, X, Y
+from ttkbootstrap.constants import BOTH, PRIMARY, VERTICAL, X
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
 LOGO_PATH = ASSETS_DIR / "audiocinema.png"
+ICON_PATH = ASSETS_DIR / "audiocinema.ico"
 
 BACKGROUND = "#f2f2f2"
 SIDEBAR_BG = "#f7f7f7"
@@ -70,34 +71,39 @@ def create_app() -> tb.Window:
         font=("Segoe UI", 10, "bold"),
     )
 
+    if ICON_PATH.exists():
+        try:
+            root.iconbitmap(str(ICON_PATH))
+        except Exception:
+            pass
+
     root_frame = ttk.Frame(root, padding=8)
     root_frame.pack(fill=BOTH, expand=True)
+    root_frame.columnconfigure(0, weight=0)
+    root_frame.columnconfigure(2, weight=1)
+    root_frame.rowconfigure(0, weight=1)
 
-    paned = ttk.Panedwindow(root_frame, orient=HORIZONTAL)
-    paned.pack(fill=BOTH, expand=True)
-
-    sidebar = ttk.Frame(paned, padding=16, style="Sidebar.TFrame")
-    paned.add(sidebar, weight=1)
+    sidebar = ttk.Frame(root_frame, padding=16, style="Sidebar.TFrame")
+    sidebar.grid(row=0, column=0, sticky="ns")
 
     separator = ttk.Separator(root_frame, orient=VERTICAL)
-    paned.add(separator)
+    separator.grid(row=0, column=1, sticky="ns", padx=(8, 8))
 
-    content = ttk.Frame(paned, padding=16)
-    paned.add(content, weight=4)
+    content = ttk.Frame(root_frame, padding=16)
+    content.grid(row=0, column=2, sticky="nsew")
     content.columnconfigure(0, weight=1)
     content.rowconfigure(1, weight=1)
 
+    header = ttk.Frame(sidebar, style="Sidebar.TFrame")
+    header.pack(pady=(0, 8))
+
     if LOGO_PATH.exists():
         logo_image = tk.PhotoImage(file=str(LOGO_PATH))
-        logo_label = ttk.Label(sidebar, image=logo_image, style="Sidebar.TLabel")
+        logo_label = ttk.Label(header, image=logo_image, style="Sidebar.TLabel")
         logo_label.image = logo_image
-        logo_label.pack(pady=(0, 8))
+        logo_label.pack(pady=(0, 6))
 
-    ttk.Label(
-        sidebar,
-        text="AudioCinema",
-        style="Title.TLabel",
-    ).pack()
+    ttk.Label(header, text="AudioCinema", style="Title.TLabel").pack()
 
     ttk.Label(
         sidebar,

@@ -378,7 +378,7 @@ class AudioCinemaGUI:
 
         ttk.Label(r, textvariable=cutoff_var, anchor="center").grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         ttk.Label(r, textvariable=ref_path_var, anchor="center").grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 6))
-        ttk.Label(r, textvariable=recorded_var, anchor="center").grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+        ttk.Label(r, textvariable=recorded_var, anchor="center").grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         
         def _record_reference_here():
             """Record and save to assets/reference_master.wav using current duration."""
@@ -398,9 +398,11 @@ class AudioCinemaGUI:
             except Exception as e:
                 messagebox.showerror("Reference Track", f"Recording failed:\n{e}")
 
-        ttk.Button(r, text="Record reference", command=_record_reference_here)\
-            .grid(row=3, column=0, sticky="w", padx=6, pady=6)
-        ttk.Label(r, text="(Uses the duration configured above)").grid(row=3, column=1, sticky="w")
+        ttk.Label(r, text="(Uses the duration configured above)", anchor="center")\
+            .grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+
+        record_btn = tb.Button(r, text="Record Reference", bootstyle=PRIMARY, command=_record_reference_here)
+        record_btn.grid(row=5, column=0, columnspan=2, pady=(0, 6))
 
         #----------------------------------------------------------------------------------------------------------------ventana "Evaluation"
         ev = ttk.Frame(nb); nb.add(ev, text="Evaluation")

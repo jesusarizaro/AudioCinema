@@ -33,6 +33,8 @@ EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 ENV_INPUT_INDEX = os.environ.get("AUDIOCINEMA_INPUT_INDEX")
 
+
+#----------------------------------------------------------------------------------------------------------------Texto que aparece en el Boton "Information"
 INFO_TEXT = (
     "AudioCinema\n\n"
     "This application records, evaluates, and compares a TEST track with a "
@@ -278,16 +280,30 @@ class AudioCinemaGUI:
                 pass
 
         frm = ttk.Frame(w, padding=10); frm.pack(fill=BOTH, expand=True)
-        nb = ttk.Notebook(frm); nb.pack(fill=BOTH, expand=True)
+        nav = ttk.Frame(frm)
+        nav.grid(row=0, column=0, sticky="ns", padx=(0, 10))
+        content = ttk.Frame(frm)
+        content.grid(row=0, column=1, sticky="nsew")
+        frm.columnconfigure(1, weight=1)
+        frm.rowconfigure(0, weight=1)
 
-        # -------- Schedule --------
-        g = ttk.Frame(nb); nb.add(g, text="Schedule")
+        sections = {}
+
+        def show_section(key: str):
+            for frame in sections.values():
+                frame.grid_remove()
+            sections[key].grid(row=0, column=0, sticky="nsew")
+
+        #----------------------------------------------------------------------------------------------------------------ventana "Schedule"
+        g = ttk.Frame(content)
+        sections["Schedule"] = g
         oncal_var = tk.StringVar(value=self._cfg(["oncalendar"], "*-*-* 02:00:00"))
         ttk.Label(g, text="OnCalendar (systemd):").grid(row=0, column=0, sticky="w", pady=(6,2))
         ttk.Entry(g, textvariable=oncal_var, width=30).grid(row=0, column=1, sticky="w", pady=(6,2))
 
-        # -------- Recording --------
-        a = ttk.Frame(nb); nb.add(a, text="Recording")
+        #----------------------------------------------------------------------------------------------------------------ventana "Tracks & Mic"
+        a = ttk.Frame(content)
+        sections["Tracks & Mic"] = a
         fs_var = tk.IntVar(value=int(self._cfg(["audio","fs"], 48000)))
         dur_var = tk.DoubleVar(value=float(self._cfg(["audio","duration_s"], 10.0)))
         pref_in = tk.StringVar(value=self._cfg(["audio","preferred_input_name"], ""))
@@ -313,8 +329,9 @@ class AudioCinemaGUI:
         device_combo = ttk.Combobox(a, textvariable=device_var, values=device_options, state="readonly", width=28)
         device_combo.grid(row=1, column=1, sticky="w")
 
-        # -------- Record Reference --------
-        r = ttk.Frame(nb); nb.add(r, text="Record Reference")
+        #----------------------------------------------------------------------------------------------------------------ventana "Record Reference"
+        r = ttk.Frame(content)
+        sections["Record Reference"] = r
         ref_var = tk.StringVar(value=self._cfg(["reference","wav_path"], str(ASSETS_DIR/"reference_master.wav")))
 
 
@@ -349,16 +366,18 @@ class AudioCinemaGUI:
             .grid(row=3, column=0, sticky="w", padx=6, pady=6)
         ttk.Label(r, text="(Uses the duration configured above)").grid(row=3, column=1, sticky="w")
 
-        # -------- Evaluation --------
-        ev = ttk.Frame(nb); nb.add(ev, text="Evaluation")
+        #----------------------------------------------------------------------------------------------------------------ventana "Evaluation"
+        ev = ttk.Frame(content)
+        sections["Evaluation"] = ev
         eval_var = tk.StringVar(value=self._cfg(["evaluation","level"], "Medium"))
         ttk.Label(ev, text="Criteria:").grid(row=0, column=0, sticky="w", pady=(6,2))
         eval_combo = ttk.Combobox(ev, textvariable=eval_var, values=["Low", "Medium", "High"], state="readonly", width=20)
         eval_combo.grid(row=0, column=1, sticky="w")
 
 
-        # -------- Telemetry --------
-        t = ttk.Frame(nb); nb.add(t, text="Telemetry")
+        #----------------------------------------------------------------------------------------------------------------ventana "Telemetry"
+        t = ttk.Frame(content)
+        sections["Telemetry"] = t
         host_var = tk.StringVar(value=self._cfg(["thingsboard","host"], "thingsboard.cloud"))
         port_var = tk.IntVar(value=int(self._cfg(["thingsboard","port"], 1883)))
         tls_var  = tk.BooleanVar(value=bool(self._cfg(["thingsboard","use_tls"], False)))
@@ -371,6 +390,15 @@ class AudioCinemaGUI:
         ttk.Label(t, text="Token:").grid(row=3, column=0, sticky="w", pady=(6,2))
         ttk.Entry(t, textvariable=token_var, width=40).grid(row=3, column=1, sticky="w")
 
+
+
+        for name in ("Schedule", "Tracks & Mic", "Record Reference", "Evaluation", "Telemetry"):
+            tb.Button(nav, text=name, width=18, command=lambda n=name: show_section(n)).pack(fill=X, pady=4)
+
+        show_section("Schedule")
+
+
+        
         
         # Barra guardar/cancelar
         btns = ttk.Frame(frm); btns.pack(fill=X, pady=(10,0))

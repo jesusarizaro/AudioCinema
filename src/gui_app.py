@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os, json, traceback
 from datetime import datetime
@@ -177,13 +175,13 @@ class AudioCinemaGUI:
             ttk.Label(card, image=self._icon_img).pack(anchor="n", pady=(0,4))
         ttk.Label(card, text="AudioCinema", font=("Segoe UI", 18, "bold")).pack(anchor="n")
 
-        desc = ("Graba, evalúa y analiza tu sistema de audio "
-                "para garantizar la mejor experiencia envolvente.")
+        desc = ("Record, evaluate, and analyze your audio system "
+                "to ensure the best immersive experience.")
         ttk.Label(card, text=desc, wraplength=220, justify="center").pack(anchor="n", pady=(6,10))
 
         btn_style = {"bootstyle": PRIMARY, "width": 20}
         tb.Button(card, text="Información",   command=self._show_info, **btn_style).pack(pady=6, fill=X)
-        tb.Button(card, text="Configuración", command=self._popup_config, **btn_style).pack(pady=6, fill=X)
+        tb.Button(card, text="Configuración", command=self._popup_settings, **btn_style).pack(pady=6, fill=X)
         tb.Button(card, text="Confirmación",  command=self._popup_confirm, **btn_style).pack(pady=6, fill=X)
         tb.Button(card, text="Prueba ahora",  command=self._run_once, **btn_style).pack(pady=(6,0), fill=X)
 
@@ -285,9 +283,9 @@ class AudioCinemaGUI:
         messagebox.showinfo("Confirmación", txt)
 
     @ui_action
-    def _popup_config(self):
+    def _popup_settings(self):
         w = tk.Toplevel(self.root)
-        w.title("Configuración")
+        w.title("Settings")
         if self._icon_img is not None:
             try:
                 w.iconphoto(True, self._icon_img)

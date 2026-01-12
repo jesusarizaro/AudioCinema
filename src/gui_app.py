@@ -180,10 +180,9 @@ class AudioCinemaGUI:
         ttk.Label(card, text=desc, wraplength=220, justify="center").pack(anchor="n", pady=(6,10))
 
         btn_style = {"bootstyle": PRIMARY, "width": 20}
-        tb.Button(card, text="Información",   command=self._show_info, **btn_style).pack(pady=6, fill=X)
-        tb.Button(card, text="Configuración", command=self._popup_settings, **btn_style).pack(pady=6, fill=X)
-        tb.Button(card, text="Confirmación",  command=self._popup_confirm, **btn_style).pack(pady=6, fill=X)
-        tb.Button(card, text="Prueba ahora",  command=self._run_once, **btn_style).pack(pady=(6,0), fill=X)
+        tb.Button(card, text="Information",   command=self._show_info, **btn_style).pack(pady=6, fill=X)
+        tb.Button(card, text="Settings", command=self._popup_settings, **btn_style).pack(pady=6, fill=X)
+        tb.Button(card, text="Record Test",  command=self._run_once, **btn_style).pack(pady=(6,0), fill=X)
 
         # separador vertical
         sep = ttk.Separator(root_frame, orient=VERTICAL)
@@ -264,23 +263,7 @@ class AudioCinemaGUI:
     def _show_info(self):
         messagebox.showinfo(APP_NAME, INFO_TEXT)
 
-    @ui_action
-    def _popup_confirm(self):
-        tb_cfg = {
-            "host": self._cfg(["thingsboard","host"], "thingsboard.cloud"),
-            "port": self._cfg(["thingsboard","port"], 1883),
-            "use_tls": self._cfg(["thingsboard","use_tls"], False),
-            "token": self._cfg(["thingsboard","token"], ""),
-        }
-        txt = (
-            f"Archivo de referencia:\n  {self._cfg(['reference','wav_path'], str(ASSETS_DIR/'reference_master.wav'))}\n\n"
-            f"Audio:\n  fs={self._cfg(['audio','fs'],48000)}  duración={self._cfg(['audio','duration_s'],10.0)} s\n"
-            f"  preferir dispositivo='{self._cfg(['audio','preferred_input_name'],'')}'\n\n"
-            f"ThingsBoard:\n  host={tb_cfg['host']}  port={tb_cfg['port']}  TLS={tb_cfg['use_tls']}\n"
-            f"  token={tb_cfg['token']}\n\n"
-            f"Programación (systemd):\n  {self._cfg(['oncalendar'],'*-*-* 02:00:00')}\n"
-        )
-        messagebox.showinfo("Confirmación", txt)
+
 
     @ui_action
     def _popup_settings(self):

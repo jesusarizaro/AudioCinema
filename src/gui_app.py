@@ -401,7 +401,8 @@ class AudioCinemaGUI:
         
         
         # Barra guardar/cancelar
-        btns = ttk.Frame(frm); btns.pack(fill=X, pady=(10,0))
+        btns = ttk.Frame(frm)
+        btns.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10,0))
         def on_save():
             self._set_cfg(["reference","wav_path"], ref_var.get().strip())
             self._set_cfg(["oncalendar"], oncal_var.get().strip())
